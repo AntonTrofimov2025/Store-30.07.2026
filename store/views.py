@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from store.models import Product, Order, ProductDetail, Address
-from django.db.models import Sum, F, Avg, Count
+from django.db.models import Sum, F, Avg, Count, IntegerField, DurationField, ExpressionWrapper
 from dateutil.relativedelta import relativedelta
 from django.utils import timezone
 
@@ -14,15 +14,16 @@ def info_(request):
     most_cheap_product = Product.objects.order_by('price').first()
     avg_price = Product.objects.values('category__name').annotate(avg_price_by_cat=Avg('price')).values('category__name', 'avg_price_by_cat')
     count_sum_orders_per_cli = Order.objects.values('customer__first_name', 'customer__last_name').annotate(
-        order_count=Count('id'), order_total_sum=Sum(F('items__price') * F('items__quantity'))
+        order_count=Count('id', distinct=True), order_total_sum=Sum(F('items__price') * F('items__quantity'))
     ).values('customer__first_name', 'customer__last_name', 'order_count', 'order_total_sum')
     weight_per_cat = (Product.objects.values('category__name').annotate(product_weight_sum=Sum('detail__weight'))
                       .values('category__name', 'product_weight_sum'))
     count_pr_per_supplier = Product.objects.values('supplier__name').annotate(
         pr_per_supp=Count('id')).values('supplier__name', 'pr_per_supp')
-    avg_prod_terms = ProductDetail.objects.aggregate(avg_term_by_prod_date=Avg(F('expiration_date') - F('manufacturing_date')))['avg_term_by_prod_date']
+    avg_prod_terms = ProductDetail.objects.aggregate(avg_term_by_prod_date=Avg(
+        ExpressionWrapper(F('expiration_date') - F('manufacturing_date'), output_field=DurationField())))['avg_term_by_prod_date']
     all_prods_desc = Product.objects.order_by('-price').all()
-    sort_orders_by_total_pr = Order.objects.annotate(total_price=F('items__price') * F('items__quantity')).order_by('-total_price')
+    sort_orders_by_total_pr = Order.objects.annotate(total_price=Sum(F('items__price') * F('items__quantity'))).order_by('-total_price')
     sort_address_by_country_city = Address.objects.order_by('country', 'city')
     sort_orders_by_orderitem_quantity = Order.objects.annotate(orderitem_count=Count('items__id')).order_by('-orderitem_count')
     all_orders_last_month = Order.objects.filter(order_date__gt=timezone.now() - relativedelta(months=1))
