@@ -1,0 +1,106 @@
+{% extends 'index.html' %}
+{% block content %}
+<h1>task 1</h1>
+<h3>total price: {{ total_price }}</h3>
+    <h1>task 2</h1>
+    {% for item in avg_price %}
+        <h3>
+        {% for key,value in item.items %}
+            {{ value }}
+            {% endfor %}
+        </h3>
+    {% endfor %}
+    <h1>task 3</h1>
+    <h3>most expensive: {{ most_exp_prod.name }}, {{ most_exp_prod.price }}</h3>
+    <h3>most cheap: {{ most_cheap_prod.name }}, {{ most_cheap_prod.price }}</h3>
+    <h1>task 4</h1>
+    {% for item in count_sum_per_order %}
+        <h3>
+        {{ item.customer__first_name }}
+        {{ item.customer__last_name }}
+        {{ item.order_count }}
+        {{ item.order_total_sum }}
+        </h3>
+    {% endfor %}
+    <h1>task 5</h1>
+    {% for item in product_weight_sum %}
+        <h3>
+        {{ item.category__name }}
+        {{ item.product_weight_sum }}
+        </h3>
+    {% endfor %}
+    <h1>task 6</h1>
+    {% for item in count_pr_per_supplier %}
+        <h3>
+        {{ item.supplier__name }}
+        {{ item.pr_per_supp }}
+        </h3>
+    {% endfor %}
+    <h1>task 7</h1>
+    <h3>Average product's term: {{ avg_prod_terms }}</h3>
+    <h1>task 1</h1>
+        <table>
+    {% for item in all_prods_desc %}
+        <tr>
+        <td>{{ item.name }}
+        {{ item.price }}</td>
+        </tr>
+    {% endfor %}
+        </table>
+    <h1>task 2</h1>
+    <table>
+    {% for item in sort_orders_by_total_pr %}
+        <tr>
+        <td>{{ item.id }}
+        {{ item.total_price }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+    <h1>task 3</h1>
+    <table>
+    {% for item in sort_address_by_country_city %}
+        <tr>
+        <td>{{ item.country }}
+        {{ item.city }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+    <h1>task 4</h1>
+    <table>
+    {% for item in sort_orders_by_orderitem_quantity %}
+        <tr>
+        <td>{{ item.id }}
+        {{ item.orderitem_count }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+    <h1>task 1</h1>
+    <table>
+    {% for item in all_orders_last_month %}
+        <tr>
+        <td>{{ item.id }}
+        {{ item.order_date }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+        <h1>task 1</h1>
+    <table>
+    {% for item in first_five_prods %}
+        <tr>
+        <td>{{ item.id }}
+        {{ item.name }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+            <h1>task 2</h1>
+    <table>
+    {% for item in exp_ten_prods %}
+        <tr>
+        <td>{{ item.id }}
+        {{ item.name }}
+        {{ item.price }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+
+{% endblock %}
