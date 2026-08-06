@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from store.models import Product, Order, ProductDetail, Address
 from django.db.models import Sum, F, Avg, Count, IntegerField, DurationField, ExpressionWrapper
+from django.db.models.functions import ExtractDay
 from dateutil.relativedelta import relativedelta
 from django.utils import timezone
 
@@ -22,6 +23,8 @@ def info_(request):
         pr_per_supp=Count('id')).values('supplier__name', 'pr_per_supp')
     avg_prod_terms = ProductDetail.objects.aggregate(avg_term_by_prod_date=Avg(
         ExpressionWrapper(F('expiration_date') - F('manufacturing_date'), output_field=DurationField())))['avg_term_by_prod_date']
+    # avg_prod_terms2 = ProductDetail.objects.annotate(date_diff=F('expiration_date') - F('manufacturing_date')
+    #                 ).annotate(extracted=ExtractDay('date_diff')).aggregate(avg_term_by_prod_date=Avg('extracted'))['avg_term_by_prod_date']
     all_prods_desc = Product.objects.order_by('-price').all()
     sort_orders_by_total_pr = Order.objects.annotate(total_price=Sum(F('items__price') * F('items__quantity'))).order_by('-total_price')
     sort_address_by_country_city = Address.objects.order_by('country', 'city')
@@ -37,6 +40,7 @@ def info_(request):
                                                                'product_weight_sum': weight_per_cat,
                                                                'count_pr_per_supplier': count_pr_per_supplier,
                                                                'avg_prod_terms': avg_prod_terms,
+                                                              # 'avg_prod_terms2': avg_prod_terms2,
                                                                'all_prods_desc': all_prods_desc,
                                                                'sort_orders_by_total_pr': sort_orders_by_total_pr,
                                                                'sort_address_by_country_city': sort_address_by_country_city,
