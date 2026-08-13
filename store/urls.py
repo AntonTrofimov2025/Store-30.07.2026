@@ -17,7 +17,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from .views import info_
+from .api_views import (CategoryListAPIView, SupplierListAPIView,
+                        ProductListAPIView, ProductDetailAPIView)
 
 urlpatterns = [
     path('', info_, name='info'),
+    path('categories/', CategoryListAPIView.as_view(), name='category-list-create-view'),
+    path('suppliers/', SupplierListAPIView.as_view(), name='supplier-list-create-view'),
+    path('products/', ProductListAPIView.as_view(), name='product-list-create-view'),
+path('products/<int:pk>', ProductDetailAPIView.as_view(), name='product-detail-view')
 ]
