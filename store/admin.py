@@ -1,6 +1,7 @@
 from django.contrib import admin
 from store.models import (Address, Category, Customer, Order,
                           OrderItem, Product, ProductDetail, Supplier)
+from django.utils.translation import gettext_lazy as _
 
 
 
@@ -14,9 +15,14 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
-    list_display = ['first_name', 'last_name', 'email', 'phone_number', 'address', 'date_joined']
+    list_display = ['first_name', 'last_name', 'email', 'phone_number', 'address', 'date_joined',
+                    'show_is_deleted', 'deleted_at']
     search_fields = ['last_name', 'email']
     # list_filter = ['date_joined']
+
+    @admin.display(boolean=True, description=_('Deleted?'))
+    def show_is_deleted(self, obj):
+        return obj.is_deleted
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)

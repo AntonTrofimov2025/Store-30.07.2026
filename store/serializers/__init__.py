@@ -1,3 +1,8 @@
 from .category import CategorySerializer, CategoryCreateSerializer
 from .supplier import SupplierSerializer, SupplierCreateSerializer
 from .product import ProductSerializer
+from .product_detail import ProductDetailSerializer, ProductDetailCreateUpdateSerializer
+from .customer import CustomerSerializer, CustomerCreateUpdateSerializer
+from .address import AddressSerializer, AddressCreateUpdateSerializer
+from .order import OrderSerializer, OrderCreateUpdateSerializer
+from .order_item import OrderItemSerializer, OrderItemCreateUpdateSerializer

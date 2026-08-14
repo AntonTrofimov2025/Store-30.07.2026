@@ -25,5 +25,5 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = ['id', 'name', 'price', 'article', 'quantity', 'available',
                   'category', 'supplier', 'category_detail', 'supplier_detail']
-        read_only = ['id']
+        read_only_fields = ['id']
 
