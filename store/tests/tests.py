@@ -5,6 +5,8 @@ from rest_framework.test import APITestCase
 from store.models import (Category, Supplier, Product, ProductDetail,
                           Address, Customer, Order, OrderItem)
 from django.contrib.auth import get_user_model
+from core.models import (AddressTypes, CustomerTypes, SupplierStatus,
+                         ProductStatus, ProductDetailTypes, OrderStatus)
 from faker import Faker
 import random
 from decimal import Decimal
@@ -23,7 +25,8 @@ class Tests(APITestCase):
         Category.objects.bulk_create(categories)
         suppliers = [Supplier(name=fake.unique.word(),
                               contact_email=fake.unique.email(),
-                              phone_number=fake.unique.phone_number()) for _ in range(40)]
+                              phone_number=fake.unique.phone_number(),
+                              status=random.choice(SupplierStatus.values)) for _ in range(40)]
         Supplier.objects.bulk_create(suppliers)
         products = [Product(name=fake.unique.word(),
                            # price=fake.pydecimal(left_digits=3, right_digits=2, positive=True),
@@ -33,7 +36,8 @@ class Tests(APITestCase):
                                     + '-' + ''.join(str(random.choice(digits)) for _ in range(2)),
                             available=random.choice([True, False]),
                             category=random.choice(categories),
-                            supplier=random.choice(suppliers)) for _ in range(100)]
+                            supplier=random.choice(suppliers),
+                            status=random.choice(ProductStatus.values)) for _ in range(100)]
         Product.objects.bulk_create(products)
         all_products = list(Product.objects.all())
         random.shuffle(all_products)
@@ -43,12 +47,14 @@ class Tests(APITestCase):
                                                                                     date(2026, 7, 15)),
                                          expiration_date=fake.date_between_dates(date(2027, 1, 1),
                                                                                  date(2030, 1, 1)),
-                                         weight=Decimal(random.randint(1, 100000)) / Decimal(100)) for _ in range(100)]
+                                         weight=Decimal(random.randint(1, 100000)) / Decimal(100),
+                                         pd_type=random.choice(ProductDetailTypes.values)) for _ in range(100)]
         ProductDetail.objects.bulk_create(product_details)
         addresses = [Address(country=fake.country(),
                              city=fake.city(),
                              street=fake.street_name(),
-                             house=str(random.randint(1, 50))) for _ in range(200)]
+                             house=str(random.randint(1, 50)),
+                             address_type=random.choice(AddressTypes.values)) for _ in range(200)]
         Address.objects.bulk_create(addresses)
         customers = [Customer(first_name=fake.first_name(),
                   last_name=fake.last_name(),
@@ -56,13 +62,14 @@ class Tests(APITestCase):
                   phone_number=fake.unique.numerify(text="+###########"),
                   address=random.choice(addresses),
                   date_joined=fake.date_time_between_dates(timezone.make_aware(datetime(2020, 1, 1)),
-                                                      timezone.make_aware(datetime(2026, 7, 30))))
+                                                      timezone.make_aware(datetime(2026, 7, 30))),
+                  customer_type=random.choice(CustomerTypes.values))
                                                                                             for _ in range(100)]
         Customer.objects.bulk_create(customers)
         orders = [Order(customer=random.choice(customers),
                         #order_date=fake.date_time_between_dates(timezone.make_aware(datetime(2026, 6, 15)),
-                                                           #timezone.now() - timedelta(days=3))
-                        )for _ in range(100)]
+                                                           #timezone.now() - timedelta(days=3)),
+                        status=random.choice(OrderStatus.values))for _ in range(100)]
         Order.objects.bulk_create(orders)
         order_items = [OrderItem(order=random.choice(orders),
                                  product=random.choice(products),
@@ -79,7 +86,7 @@ class Tests(APITestCase):
         self.assertIsNotNone(response.data['id'])
 
     def test_create_supplier(self):
-        supp = {'name': 'hey',
+        supp = {'name': 'hey', 'status': 'av',
         'contact_email': 'dasd@yahoo.com'}
         response = self.client.post(reverse('supplier-list-create-view'), data=supp, format='json')
         self.assertIsNone(response.data.get('name'))
@@ -104,10 +111,11 @@ class Tests(APITestCase):
 
     def test_create_prod_detail(self):
         product = {'name': 'hey', 'price': Decimal('122.22'), 'article': 'prod_hey', 'quantity': 5, 'available': True,
-                   'category': Category.objects.first().id, 'supplier': Supplier.objects.first().id}
+                   'category': Category.objects.first().id, 'supplier': Supplier.objects.first().id,
+                   'status': 'od'}
         prod_created = self.client.post(reverse('product-list-create-view'), data=product, format='json')
         prod_detail = {'description': 'dnkasdnasjdnkajsdnjk', 'product': prod_created.data['id'],
-                       'manufacturing_date': '2025-1-1',
+                       'manufacturing_date': '2025-1-1', 'pd_type': 'cp',
                        'expiration_date': '2027-2-2', 'weight': 555}
         response = self.client.post(reverse('prod_dt-list-create-view'), data=prod_detail, format='json')
         self.assertEqual(response.status_code, 201)
@@ -124,7 +132,8 @@ class Tests(APITestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_address_create(self):
-        new_addr = {'country': 'Deutsches Reich', 'city': '312', 'street': 'Brandenburger Tor', 'house': 4}
+        new_addr = {'country': 'Deutsches Reich', 'city': '312', 'street': 'Brandenburger Tor', 'house': 4,
+                    'address_type': 'hm'}
         response = self.client.post(reverse('address-list-create-view'), data=new_addr, format='json')
         self.assertEqual(response.status_code, 201)
 
@@ -141,7 +150,7 @@ class Tests(APITestCase):
         data = {'first_name': 'Johnny', 'last_name': 'Walker',
                 'email': 'john_walk@gmail.com',
                 'phone_number': '+44555555555',
-                'address': gimme_address.id}
+                'address': gimme_address.id, 'customer_type': 'rg'}
         response = self.client.post(reverse('customer-list-create-view'), data=data, format='json')
         self.assertEqual(response.status_code, 201)
 
@@ -158,14 +167,14 @@ class Tests(APITestCase):
     def test_order_create(self):
         gimme_custmr = Customer.objects.first()
         data = {#'order_date': timezone.make_aware(datetime(2026, 8, 4)).isoformat(),
-                'customer': gimme_custmr.id}
+                'customer': gimme_custmr.id, 'status': 'pd'}
         response = self.client.post(reverse('order-list-create-view'), data=data, format='json')
         self.assertEqual(response.status_code, 201)
 
     def test_order_update(self):
         gimme_custmr = Customer.objects.first()
         data = {#'order_date': timezone.make_aware(datetime(2026, 8, 4)).isoformat(),
-                'customer': gimme_custmr.id}
+                'customer': gimme_custmr.id, 'status': 'sh'}
         created_order = self.client.post(reverse('order-list-create-view'), data=data, format='json')
         # data = {#'order_date': timezone.make_aware(datetime(2021, 8, 4)).isoformat(),
         #         'customer': gimme_custmr.id}
@@ -194,7 +203,8 @@ class Tests(APITestCase):
                                     + '-' + ''.join(str(random.choice(digits)) for _ in range(2)),
                             'available': random.choice([True, False]),
                             'category': Category.objects.first().id,
-                            'supplier': Supplier.objects.first().id}
+                            'supplier': Supplier.objects.first().id,
+                            'status': 'is'}
         create_prod = self.client.post(reverse('product-list-create-view'), data=prod_data, format='json')
         data = {'order': get_order.id,
                 'product': create_prod.data['id'],

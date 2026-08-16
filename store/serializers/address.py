@@ -9,12 +9,12 @@ class AddressSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Address
-        fields = ['country', 'city', 'street', 'house']
+        fields = ['country', 'city', 'street', 'house', 'address_type']
 
 class AddressCreateUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Address
-        fields = ['id', 'country', 'city', 'street', 'house']
+        fields = ['id', 'country', 'city', 'street', 'house', 'address_type']
         read_only_fields = ['id']
 

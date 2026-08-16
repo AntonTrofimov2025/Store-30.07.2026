@@ -10,7 +10,7 @@ class OrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ['order_date', 'items']
+        fields = ['order_date', 'items', 'status']
 
 
 class OrderCreateUpdateSerializer(serializers.ModelSerializer):
@@ -19,7 +19,7 @@ class OrderCreateUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ['id', 'order_date', 'customer']
+        fields = ['id', 'order_date', 'customer', 'status']
         read_only_fields = ['id', 'order_date']
 
 

@@ -13,7 +13,8 @@ class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customer
         fields = ['first_name', 'last_name', 'email', 'is_deleted',
-                  'phone_number', 'address', 'orders', 'date_joined']
+                  'phone_number', 'address', 'orders', 'date_joined',
+                  'customer_type']
         read_only_fields = ['date_joined', 'is_deleted', 'deleted_at']
 
 
@@ -23,7 +24,7 @@ class CustomerCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customer
         fields = ['id', 'first_name', 'last_name', 'email',
-                  'phone_number', 'address']
+                  'phone_number', 'address', 'customer_type']
         read_only_fields = ['id', 'date_joined', 'is_deleted', 'deleted_at']
 
     def validate_phone_number(self, value):

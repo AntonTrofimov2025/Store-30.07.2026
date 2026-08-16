@@ -8,12 +8,14 @@ class ProductDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductDetail
-        fields = ['description', 'product', 'manufacturing_date', 'expiration_date', 'weight']
+        fields = ['description', 'product', 'manufacturing_date', 'expiration_date', 'weight',
+                  'pd_type']
 
 class ProductDetailCreateUpdateSerializer(serializers.ModelSerializer):
     product = PrimaryKeyRelatedField(queryset=Product.objects.all(), write_only=True)
 
     class Meta:
         model = ProductDetail
-        fields = ['id', 'description', 'product', 'manufacturing_date', 'expiration_date', 'weight']
+        fields = ['id', 'description', 'product', 'manufacturing_date', 'expiration_date', 'weight',
+                  'pd_type']
         read_only_fields = ['id']

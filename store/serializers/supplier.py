@@ -10,7 +10,7 @@ class SupplierSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Supplier
-        fields = ['id', 'name', 'contact_email', 'phone_number']
+        fields = ['id', 'name', 'contact_email', 'phone_number', 'status']
         read_only = ['id']
 
 class SupplierCreateSerializer(serializers.ModelSerializer):
@@ -26,6 +26,6 @@ class SupplierCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Supplier
-        fields = ['id', 'name', 'contact_email', 'phone_number']
+        fields = ['id', 'name', 'contact_email', 'phone_number', 'status']
         read_only_fields = ['id']
 

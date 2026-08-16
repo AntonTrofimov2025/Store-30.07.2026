@@ -1,5 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from core.models import (AddressTypes, CustomerTypes, SupplierStatus,
+                         ProductStatus, ProductDetailTypes, OrderStatus)
 
 
 class Category(models.Model):
@@ -18,6 +20,7 @@ class Supplier(models.Model):
     name = models.CharField(max_length=150, verbose_name='Название')
     contact_email = models.EmailField(verbose_name='Email для связи')
     phone_number = models.CharField(max_length=20, verbose_name='Номер телефона')
+    status = models.CharField(max_length=2, choices=SupplierStatus, verbose_name=_('Status'))
 
     class Meta:
         verbose_name = 'Поставщик'
@@ -40,6 +43,7 @@ class Product(models.Model):
     quantity = models.PositiveIntegerField(default=0, verbose_name='Количество на складе')
     article = models.CharField(max_length=50, unique=True, verbose_name='Артикул')
     available = models.BooleanField(default=True, verbose_name='В наличии')
+    status = models.CharField(max_length=2, choices=ProductStatus, verbose_name=_('Status'))
 
     class Meta:
         verbose_name = 'Товар'
@@ -58,6 +62,7 @@ class ProductDetail(models.Model):
     manufacturing_date = models.DateField(verbose_name='Дата изготовления')
     expiration_date = models.DateField(null=True, blank=True, verbose_name='Срок годности')
     weight = models.DecimalField(max_digits=8, decimal_places=3, verbose_name='Вес, кг')
+    pd_type = models.CharField(max_length=2, choices=ProductDetailTypes, verbose_name=_('Type'))
 
     class Meta:
         verbose_name = 'Характеристики товара'
@@ -73,6 +78,7 @@ class Address(models.Model):
     city = models.CharField(max_length=100, verbose_name='Город')
     street = models.CharField(max_length=150, verbose_name='Улица')
     house = models.CharField(max_length=10, verbose_name='Дом')
+    address_type = models.CharField(max_length=2, choices=AddressTypes, verbose_name=_('Address Type'))
 
     class Meta:
         verbose_name = 'Адрес'
@@ -94,6 +100,7 @@ class Customer(models.Model):
     )
     date_joined = models.DateTimeField(auto_now_add=True, verbose_name='Дата регистрации')
     deleted_at = models.DateTimeField(null=True, verbose_name=_('Deleted at'))
+    customer_type = models.CharField(max_length=2, choices=CustomerTypes, verbose_name=_('Customer Type'))
 
     @property
     def is_deleted(self):
@@ -113,6 +120,7 @@ class Order(models.Model):
         Customer, on_delete=models.CASCADE, related_name='orders', verbose_name='Клиент'
     )
     order_date = models.DateTimeField(auto_now_add=True, verbose_name='Дата заказа')
+    status = models.CharField(max_length=2, choices=OrderStatus, verbose_name=_('Status'))
 
     class Meta:
         verbose_name = 'Заказ'
