@@ -2,10 +2,13 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from core.models import (AddressTypes, CustomerTypes, SupplierStatus,
                          ProductStatus, ProductDetailTypes, OrderStatus)
+from django_extensions.db.fields import AutoSlugField
+from pytils.translit import slugify
 
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name='Название')
+    slug = AutoSlugField(populate_from='name', unique=True, blank=True, slugify_function=slugify)
 
     class Meta:
         verbose_name = 'Категория'

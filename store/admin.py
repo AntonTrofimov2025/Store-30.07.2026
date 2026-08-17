@@ -30,7 +30,7 @@ class AddressAdmin(admin.ModelAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ['name']
+    list_display = ['name', 'slug']
 
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):

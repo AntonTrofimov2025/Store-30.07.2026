@@ -19,7 +19,8 @@ class Tests(APITestCase):
     def setUp(self):
         self.create_db()
 
-    def create_db(self):
+    @staticmethod
+    def create_db():
         fake = Faker()
         categories = [Category(name=fake.unique.word()) for _ in range(25)]
         Category.objects.bulk_create(categories)
@@ -80,7 +81,11 @@ class Tests(APITestCase):
 
     def test_create_category(self):
         cat = {'name': 'hey'}
-        response = self.client.post(reverse('category-list-create-view'), data=cat, format='json')
+        response = self.client.post(reverse(
+            #'category-list-create-view'
+            'category-list'
+        ), data=cat, format='json')
+        self.assertEqual(response.status_code, 201)
         self.assertIsNone(response.data.get('name'))
         self.assertEqual(len(response.data), 1)
         self.assertIsNotNone(response.data['id'])
@@ -88,7 +93,11 @@ class Tests(APITestCase):
     def test_create_supplier(self):
         supp = {'name': 'hey', 'status': 'av',
         'contact_email': 'dasd@yahoo.com'}
-        response = self.client.post(reverse('supplier-list-create-view'), data=supp, format='json')
+        response = self.client.post(reverse(
+            #'supplier-list-create-view'
+            'supplier-list'
+            ), data=supp, format='json')
+        self.assertEqual(response.status_code, 201)
         self.assertIsNone(response.data.get('name'))
         self.assertEqual(len(response.data), 1)
         self.assertIsNotNone(response.data['id'])
@@ -97,50 +106,85 @@ class Tests(APITestCase):
 
     def test_product_create(self):
         product = {'name': 'hey', 'price': Decimal('122.22'), 'article': 'prod_hey', 'quantity': 5, 'available': True,
-                   'category': Category.objects.first().id, 'supplier': Supplier.objects.first().id}
-        self.client.post(reverse('product-list-create-view'), data=product, format='json')
-        response_list = self.client.get(reverse('product-list-create-view'))
-        for product in response_list.data:
+                   'category': Category.objects.first().id, 'supplier': Supplier.objects.first().id, 'status': 'is'}
+        response = self.client.post(reverse(
+            #'product-list-create-view'
+            'product-list'
+        ), data=product, format='json')
+        self.assertEqual(response.status_code, 201)
+        response_list = self.client.get(reverse(
+            #'product-list-create-view'
+            'product-list'
+        ))
+        # GenericView
+        # for product in response_list.data:
+        # ModelViewSet
+        self.assertEqual(response_list.status_code, 200)
+        for product in response_list.data['results']:
             self.assertIn('name', product['category_detail'])
             self.assertIn('name', product['supplier_detail'])
         get_prod = Product.objects.first()
-        self.client.put(reverse('product-detail-view', args=[get_prod.id]),
-                                   data={'name': 'trulala'}, format='json')
+        res = self.client.patch(reverse(
+            #'product-detail-view',
+            'product-detail',
+            args=[get_prod.id]), data={'name': 'trulala'}, format='json')
+        self.assertEqual(res.status_code, 200)
         get_prod.refresh_from_db()
         self.assertEqual(get_prod.name, 'trulala')
+        res = self.client.put(reverse(
+            #'product-detail-view',
+            'product-detail',
+            args=[get_prod.id]), data={'name': 'trulala after put', 'price': Decimal('122.22'), 'article': 'hey_lalaley',
+        'category': Category.objects.first().id, 'supplier': Supplier.objects.first().id, 'status': 'is'}, format='json')
+        self.assertEqual(res.status_code, 200)
+        get_prod.refresh_from_db()
+        self.assertEqual(get_prod.name, 'trulala after put')
 
     def test_create_prod_detail(self):
         product = {'name': 'hey', 'price': Decimal('122.22'), 'article': 'prod_hey', 'quantity': 5, 'available': True,
                    'category': Category.objects.first().id, 'supplier': Supplier.objects.first().id,
                    'status': 'od'}
-        prod_created = self.client.post(reverse('product-list-create-view'), data=product, format='json')
+        prod_created = self.client.post(reverse(
+            #'product-list-create-view'
+            'product-list'
+        ), data=product, format='json')
+        self.assertEqual(prod_created.status_code, 201)
         prod_detail = {'description': 'dnkasdnasjdnkajsdnjk', 'product': prod_created.data['id'],
                        'manufacturing_date': '2025-1-1', 'pd_type': 'cp',
                        'expiration_date': '2027-2-2', 'weight': 555}
-        response = self.client.post(reverse('prod_dt-list-create-view'), data=prod_detail, format='json')
+        response = self.client.post(reverse(
+            #'prod_dt-list-create-view'
+            'product_detail-list'
+        ), data=prod_detail, format='json')
         self.assertEqual(response.status_code, 201)
 
     def test_update_prod_detail(self):
         our_product = Product.objects.first()
         upd = {'description': 'hey whats up? :)'}
-        response = self.client.patch(reverse('prod_dt-detail-view', args=[our_product.detail.id]), data=upd, format='json')
+        response = self.client.patch(reverse(
+            #'prod_dt-detail-view',
+                    'product_detail-detail',
+            args=[our_product.detail.id]), data=upd, format='json')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['description'], 'hey whats up? :)')
 
     def test_address_list(self):
-        response = self.client.get(reverse('address-list-create-view'))
+        # response = self.client.get(reverse('address-list-create-view'))
+        response = self.client.get(reverse('address-list'))
         self.assertEqual(response.status_code, 200)
 
     def test_address_create(self):
         new_addr = {'country': 'Deutsches Reich', 'city': '312', 'street': 'Brandenburger Tor', 'house': 4,
                     'address_type': 'hm'}
-        response = self.client.post(reverse('address-list-create-view'), data=new_addr, format='json')
+        #response = self.client.post(reverse('address-list-create-view'), data=new_addr, format='json')
+        response = self.client.post(reverse('address-list'), data=new_addr, format='json')
         self.assertEqual(response.status_code, 201)
 
     def test_address_update(self):
         get_addr = Address.objects.all().first()
         upd = {'street': 'Brandenburger Tor', 'house': '4'}
-        response = self.client.patch(reverse('address-detail-view', args=[get_addr.id]), data=upd, format='json')
+        #response = self.client.patch(reverse('address-detail-view', args=[get_addr.id]), data=upd, format='json')
+        response = self.client.patch(reverse('address-detail', args=[get_addr.id]), data=upd, format='json')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['street'], 'Brandenburger Tor')
         self.assertEqual(response.data['house'], '4')
@@ -151,14 +195,16 @@ class Tests(APITestCase):
                 'email': 'john_walk@gmail.com',
                 'phone_number': '+44555555555',
                 'address': gimme_address.id, 'customer_type': 'rg'}
-        response = self.client.post(reverse('customer-list-create-view'), data=data, format='json')
+        # response = self.client.post(reverse('customer-list-create-view'), data=data, format='json')
+        response = self.client.post(reverse('customer-list'), data=data, format='json')
         self.assertEqual(response.status_code, 201)
 
     def test_customer_update(self):
         get_smbd = Customer.objects.first()
         data = {'first_name': 'Mike',
                 'phone_number': '+342311323333'}
-        response = self.client.patch(reverse('customer-detail-view', args=[get_smbd.id]), data=data, format='json')
+        # response = self.client.patch(reverse('customer-detail-view', args=[get_smbd.id]), data=data, format='json')
+        response = self.client.patch(reverse('customer-detail', args=[get_smbd.id]), data=data, format='json')
         self.assertEqual(response.status_code, 200)
         get_smbd.refresh_from_db()
         self.assertEqual(get_smbd.first_name, 'Mike')
@@ -168,14 +214,17 @@ class Tests(APITestCase):
         gimme_custmr = Customer.objects.first()
         data = {#'order_date': timezone.make_aware(datetime(2026, 8, 4)).isoformat(),
                 'customer': gimme_custmr.id, 'status': 'pd'}
-        response = self.client.post(reverse('order-list-create-view'), data=data, format='json')
+        # response = self.client.post(reverse('order-list-create-view'), data=data, format='json')
+        response = self.client.post(reverse('order-list'), data=data, format='json')
         self.assertEqual(response.status_code, 201)
 
     def test_order_update(self):
         gimme_custmr = Customer.objects.first()
         data = {#'order_date': timezone.make_aware(datetime(2026, 8, 4)).isoformat(),
                 'customer': gimme_custmr.id, 'status': 'sh'}
-        created_order = self.client.post(reverse('order-list-create-view'), data=data, format='json')
+        # created_order = self.client.post(reverse('order-list-create-view'), data=data, format='json')
+        created_order = self.client.post(reverse('order-list'), data=data, format='json')
+        self.assertEqual(created_order.status_code, 201)
         # data = {#'order_date': timezone.make_aware(datetime(2021, 8, 4)).isoformat(),
         #         'customer': gimme_custmr.id}
         # response = self.client.patch(reverse('order-detail-create-view',
@@ -205,12 +254,15 @@ class Tests(APITestCase):
                             'category': Category.objects.first().id,
                             'supplier': Supplier.objects.first().id,
                             'status': 'is'}
-        create_prod = self.client.post(reverse('product-list-create-view'), data=prod_data, format='json')
+        # create_prod = self.client.post(reverse('product-list-create-view'), data=prod_data, format='json')
+        create_prod = self.client.post(reverse('product-list'), data=prod_data, format='json')
+        self.assertEqual(create_prod.status_code, 201)
         data = {'order': get_order.id,
                 'product': create_prod.data['id'],
                 'quantity': random.randint(1, 100),
                 'price': 50000}
-        create_order_item = self.client.post(reverse('order_item-list-create-view'), data=data, format='json')
+        # create_order_item = self.client.post(reverse('order_item-list-create-view'), data=data, format='json')
+        create_order_item = self.client.post(reverse('order_item-list'), data=data, format='json')
         self.assertEqual(create_order_item.status_code, 201)
 
     def test_order_item_wrong_quantity(self):
@@ -218,7 +270,8 @@ class Tests(APITestCase):
                 'product': Product.objects.last().id,
                 'quantity': 1001,
                 'price': 50000}
-        create_order_item = self.client.post(reverse('order_item-list-create-view'), data=data, format='json')
+        # create_order_item = self.client.post(reverse('order_item-list-create-view'), data=data, format='json')
+        create_order_item = self.client.post(reverse('order_item-list'), data=data, format='json')
         self.assertEqual(create_order_item.status_code, 400)
         self.assertIn('Quantity above 1000 is not allowed!!', create_order_item.data['quantity'])
 
@@ -226,7 +279,10 @@ class Tests(APITestCase):
         get_order_item = OrderItem.objects.first()
         upd = {'quantity': 445,
                'price': 1234}
-        response = self.client.patch(reverse('order_item-detail-view', args=[get_order_item.id]),
+        response = self.client.patch(reverse(
+            # 'order_item-detail-view',
+            'order_item-detail',
+            args=[get_order_item.id]),
                                      data=upd, format='json')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['quantity'], 445)
@@ -238,7 +294,9 @@ class Tests(APITestCase):
                 'email': 'john_walk@gmail.com',
                 'phone_number': your_number,
                 'address': gimme_address.id}
-        response = self.client.post(reverse('customer-list-create-view'), data=data, format='json')
+        # response = self.client.post(reverse('customer-list-create-view'), data=data, format='json')
+        response = self.client.post(reverse('customer-list'), data=data, format='json')
+        self.assertEqual(response.status_code, 400)
         self.assertTrue('The phone number must consist of 10-15 symbols in total and start from + symbol!!\n'
                         'Example: +3423234455323' in response.data['phone_number']
                         or 'Ensure this field has no more than 15 characters.' in response.data['phone_number'])

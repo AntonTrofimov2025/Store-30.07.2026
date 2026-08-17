@@ -33,3 +33,20 @@ class CustomerCreateUpdateSerializer(serializers.ModelSerializer):
                                               'Example: +3423234455323')
         return value
 
+    def validate_email(self, value):
+        if Customer.objects.filter(email=value).exclude(pk=self.instance.pk if self.instance else None).exists():
+            raise serializers.ValidationError('This email already exists!!')
+        return value
+
+    # def create(self, validated_data):
+    #     if Customer.objects.filter(email=validated_data.get('email')).exists():
+    #         raise serializers.ValidationError('This email already exists!!')
+    #     return super().create(validated_data)
+    #
+    # def update(self, instance, validated_data):
+    #     email = validated_data.get('email')
+    #     if email and Customer.objects.filter(email=email).exclude(pk=instance.pk).exists():
+    #         raise serializers.ValidationError('This email already exists!!')
+    #     return super().update(instance, validated_data)
+    #
+
