@@ -1,7 +1,5 @@
-from django.template.context_processors import request
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.decorators import action
 from rest_framework import viewsets
 from django.db import transaction
 from store.models import (Category, Supplier, Product, Order,
@@ -17,6 +15,8 @@ from store.serializers import (CategorySerializer, CategoryCreateSerializer,
 from rest_framework.filters import OrderingFilter, SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from store.filters import ProductFilter
+from rest_framework.decorators import action
+from django.db.models import Count, Q
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -30,6 +30,27 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         return self.serializers.get(self.request.method, CategorySerializer)
+
+    @action(detail=False, methods=['get'], url_name='count', url_path='count')
+    def count_all_categories(self, request, *args, **kwargs):
+        count_all_cats = Category.objects.annotate(total_products=Count('products__id')).values('slug', 'total_products')
+        result = {f'total_products_in_category_{category['slug'].replace('-', '_')}': category['total_products']
+                  for category in count_all_cats}
+        return Response(result, status=status.HTTP_200_OK)
+
+    # @action(detail=False, methods=['get'], url_name='count', url_path='count')
+    # def count_all_categories(self, request, *args, **kwargs):
+    #     count_all_cats = Category.objects.aggregate(
+    #         **{f'total_products_in_category_{name['slug'].replace('-', '_')}': Count('products__id', filter=Q(name=name['name']))
+    #            for name in Category.objects.values('name', 'slug')})
+    #     return Response(count_all_cats, status=status.HTTP_200_OK)
+
+    # @action(detail=False, methods=['get'], url_name='count', url_path='count')
+    # def count_all_categories(self, request, *args, **kwargs):
+    #     count_all_cats = Category.objects.aggregate(
+    #         **{f'total_products_in_category_{name['name'].lower().replace(' ', '_')}': Count('products__id', filter=Q(name=name['name']))
+    #            for name in Category.objects.values('name')})
+    #     return Response(count_all_cats, status=status.HTTP_200_OK)
 
 class SupplierViewSet(viewsets.ModelViewSet):
 
